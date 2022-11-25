@@ -1,0 +1,131 @@
+<script setup>
+import { ref, onMounted, computed, watch } from "vue";
+
+const todos = ref([]);
+const name = ref("");
+const input_content = ref("");
+const input_category = ref(null);
+
+const todo_ascend = computed(() =>
+  todos.value.sort((a, b) => {
+    return a.createdAt - b.createdAt;
+  })
+);
+
+watch(name, (newVal) => {
+  localStorage.setItem("name", newVal);
+});
+
+watch(
+  todos,
+  (newVal) => {
+    localStorage.setItem("todos", JSON.stringify(newVal));
+  },
+  {
+    deep: true,
+  }
+);
+
+const addTodo = () => {
+  if (input_content.value.trim() === "" || input_category.value === null) {
+    return;
+  }
+  todos.value.push({
+    content: input_content.value,
+    category: input_category.value,
+    done: false,
+    editable: false,
+    createdAt: new Date().getTime(),
+  });
+
+  input_content.value = "";
+  input_category.value = null;
+};
+
+const removeTodo = (todo) => {
+  todos.value = todos.value.filter((t) => t !== todo);
+};
+
+// onMounted(() => {
+//   name.value = localStorage.getItem("name") || "";
+//   todos.value = localStorage.getItem(todos) || [];
+// });
+</script>
+
+<template>
+  <main id="app">
+    <section class="greeting">
+      <h2 class="title">
+        Whats up, &nbsp;
+        <input type="text" id="name" placeholder="Name here" v-model="name" />
+      </h2>
+    </section>
+
+    <section class="create-todo">
+      <h1>CREATE A TODO</h1>
+
+      <form @submit.prevent="addTodo" id="new-todo-form">
+        <h4>Whats on your todo list</h4>
+        <input
+          type="text"
+          name="content"
+          id="content"
+          placeholder="e.g create a project"
+          v-model="input_content"
+        />
+
+        <h4>Pick a category</h4>
+        <div class="options">
+          <label>
+            <input
+              type="radio"
+              name="category"
+              id="category1"
+              value="business"
+              v-model="input_category"
+            />
+            <span class="bubble business"></span>
+            <div>Business</div>
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              name="category2"
+              id="category2"
+              value="personal"
+              v-model="input_category"
+            />
+            <span class="bubble personal"></span>
+            <div>Personal</div>
+          </label>
+        </div>
+
+        <input type="submit" value="Add todo" />
+      </form>
+    </section>
+
+    <section class="todo-list">
+      <h3>TODO LIST</h3>
+      <div class="list" id="todo-list">
+        <div
+          v-for="todo in todo_ascend"
+          :class="`todo-item ${todo.done && 'done'}`"
+        >
+          <label>
+            <input type="checkbox" v-model="todo.done" />
+            <span :class="`bubble ${todo.category}`"></span>
+          </label>
+          <div class="todo-content">
+            <input type="text" v-model="todo.content" />
+          </div>
+          <div class="actions">
+            <button class="delete" @click="removeTodo(todo)">Delete</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</template>
+
+<style scoped></style>
